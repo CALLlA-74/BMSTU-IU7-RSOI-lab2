@@ -39,13 +39,60 @@ async def get_reservation_by_uid(reservaionUid: str, username: str):
 
 
 async def create_reservation(reservRequest: schemas.CreateReservationRequest, username: str):
-    url_reserv_serv = f"http://{settings['reservation_serv_host']}:{settings['reservation_serv_port']}" \
-                      f"/{settings['prefix']}/reservations"
-    header = {'X-User-Name', username}
+    url_reserv_serv = f"http://{settings['reservation_serv_host']}:{settings['reservation_serv_port']}"
+    url_payment_serv = f"http://{settings['payment_serv_host']}:{settings['payment_serv_port']}"
+    url_loyalty_serv = f"http://{settings['loyalty_serv_host']}:{settings['loyalty_serv_port']}{settings['prefix']}" \
+                       f"/loyalty"
+    header = {'X-User-Name': username}
+    resp = serviceRequests.get(url_reserv_serv + f'{settings["prefix"]}/hotels/{reservRequest.hotelUid}')
+
+    if resp is None or resp.status_code != status.HTTP_200_OK:
+        return None
+    hotel_resp: schemas.HotelResponse = resp
+    cost = (reservRequest.endDate - reservRequest.startDate)*hotel_resp.price
+    loyalty_info: schemas.LoyaltyInfoResponse = (await get_loyalty(username))
+
+    if loyalty_info is None:
+        return Non
+
+    cost *= (0.01*(100-loyalty_info.discount))
+    resp = serviceRequests.post(url_payment_serv + f'{settings["prefix"]}/payments', headers={'X-Payment-Price': cost})
+
+    if resp is None or resp.status_code != status.HTTP_200_OK:
+        return Non
+
+    pay_info: schemas.PaymentInfo = resp
+    resp = serviceRequests.patch(url_loyalty_serv, headers=header)
+
+    if resp is None or resp.status_code != status.HTTP_200_OK:
+        return Non
+
+    resp = serviceRequests.post(url_reserv_serv + f'{settings["prefix"]}/reservations', headers=header)
+
+    if resp is None or resp.status_code != status.HTTP_200_OK:
+        return Non
+
+    reservResponse: schemas.CreateReservationResponseFromReservService = resp
+    return schemas.CreateReservationResponse(
+        reservationUid=reservResponse.reservationUid,
+        hotelUid=reservResponse.hotelUid,
+        startDate=reservResponse.startDate,
+        endDate=reservResponse.endDate,
+        discount=loyalty_info.discount,
+        status=reservResponse.status,
+        payment=pay_info
+    )
 
 
+async def delete_reservation(eservationUid: str, username: str):
+    pass
 
 
 async def get_loyalty(username: str):
-    url_loyalty_serv = f"http://{settings['loyalty_serv_host']}:{settings['loyalty_serv_port']}{settings['prefix']}/loyalty"
-    return serviceRequests.get(url_loyalty_serv, headers={'X-User-Name': username}).json()
+    url_loyalty_serv = f"http://{settings['loyalty_serv_host']}:{settings['loyalty_serv_port']}{settings['prefix']}" \
+                       f"/loyalty"
+    response = serviceRequests.get(url_loyalty_serv, headers={'X-User-Name': username})
+
+    if response is None or response.status_code != status.HTTP_200_OK:
+        return None
+    return response.json()

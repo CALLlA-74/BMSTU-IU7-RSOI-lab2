@@ -35,12 +35,12 @@ class PaginationResponse(BaseModel):
 
 
 class PaymentInfo(BaseModel):
-    status: Literal['PAID', 'RESERVED', 'CANCELED']
+    status: Literal['PAID', 'CANCELED']
     price: float
 
 
 class CreateReservationRequest(BaseModel):
-    hotel: HotelInfo
+    hotelUid: UUID
     startDate: date
     endDate: date
 
@@ -58,7 +58,7 @@ class CreateReservationResponse(BaseModel):
     startDate: date
     endDate: date
     discount: int
-    status: Literal['PAID', 'RESERVED', 'CANCELED']
+    status: Literal['PAID', 'CANCELED']
     payment: PaymentInfo
 
     @validator("startDate", pre=True)
@@ -74,7 +74,7 @@ class ReservationResponse(BaseModel):
     hotel: HotelInfo
     startDate: date
     endDate: date
-    status: Literal['PAID', 'RESERVED', 'CANCELED']
+    status: Literal['PAID', 'CANCELED']
     payment: PaymentInfo
 
     @validator("startDate", pre=True)
@@ -102,3 +102,33 @@ class ErrorDescription(BaseModel):
 class ValidationErrorResponse(BaseModel):
     message: str
     errors: List[ErrorDescription]
+
+
+class CreateReservationRequestForReservService(BaseModel):
+    paymentUid: UUID
+    hotelUid: UUID
+    startDate: date
+    endDate: date
+
+    @validator("startDate", pre=True)
+    def parse_date(cls, value):
+        return datetime.strptime(
+            value,
+            "%d/%m/%Y"
+        ).date()
+
+
+class CreateReservationResponseFromReservService(BaseModel):
+    reservationUid: UUID
+    paymentUid: UUID
+    hotelUid: UUID
+    startDate: date
+    endDate: date
+    status: Literal['PAID', 'CANCELED']
+
+    @validator("startDate", pre=True)
+    def parse_date(cls, value):
+        return datetime.strptime(
+            value,
+            "%d/%m/%Y"
+        ).date()
