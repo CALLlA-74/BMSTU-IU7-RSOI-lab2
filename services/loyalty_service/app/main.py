@@ -1,7 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
-from routers import router as GatewayRouter
+from database.AppDatabase import AppDatabase
+from routers import router as LoyaltyRouter
 from config.config import get_settings
 
 
@@ -39,10 +40,12 @@ app = FastAPI(title="OpenAPI definition",
                   {"url": f"http://{settings['external_ip']}:{settings['port']}"}
               ]
               )
-app.include_router(GatewayRouter, prefix='')
+app.include_router(LoyaltyRouter, prefix='')
 app.openapi = get_openapi_schema
+app_db = AppDatabase.app_db
 
 if __name__ == "__main__":
+    app_db.create_all()
     uvicorn.run('main:app',
                 host=settings['host'],
                 port=settings['port'],
