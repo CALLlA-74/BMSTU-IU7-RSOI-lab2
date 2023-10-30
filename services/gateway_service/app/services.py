@@ -38,6 +38,14 @@ async def get_reservation_by_uid(reservaionUid: str, username: str):
     return reservation_response.json()
 
 
+async def create_reservation(reservRequest: schemas.CreateReservationRequest, username: str):
+    url_reserv_serv = f"http://{settings['reservation_serv_host']}:{settings['reservation_serv_port']}" \
+                      f"/{settings['prefix']}/reservations"
+    header = {'X-User-Name', username}
+
+
+
+
 async def get_loyalty(username: str):
     url_loyalty_serv = f"http://{settings['loyalty_serv_host']}:{settings['loyalty_serv_port']}{settings['prefix']}/loyalty"
     return serviceRequests.get(url_loyalty_serv, headers={'X-User-Name': username}).json()

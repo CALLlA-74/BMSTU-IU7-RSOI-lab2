@@ -27,6 +27,10 @@ class ResponsesEnum(Enum):
         "model": schemas.CreateReservationRequest
     }
 
+    CreateReservationResponse = {
+        "model": schemas.CreateReservationResponse
+    }
+
     ReservationsResponse = {
         "model": list[schemas.ReservationResponse]
     }

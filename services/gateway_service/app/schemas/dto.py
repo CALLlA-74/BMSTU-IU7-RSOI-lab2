@@ -52,6 +52,23 @@ class CreateReservationRequest(BaseModel):
         ).date()
 
 
+class CreateReservationResponse(BaseModel):
+    reservationUid: UUID
+    hotelUid: UUID
+    startDate: date
+    endDate: date
+    discount: int
+    status: Literal['PAID', 'RESERVED', 'CANCELED']
+    payment: PaymentInfo
+
+    @validator("startDate", pre=True)
+    def parse_date(cls, value):
+        return datetime.strptime(
+            value,
+            "%d/%m/%Y"
+        ).date()
+
+
 class ReservationResponse(BaseModel):
     reservationUid: UUID
     hotel: HotelInfo

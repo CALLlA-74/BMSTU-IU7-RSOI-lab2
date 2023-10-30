@@ -58,6 +58,17 @@ async def get_reservation_by_uid(reservaionUid: str, username: str = Header(alia
         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=schemas.ErrorResponse().model_dump())
 
 
+@router.post(f'{settings["prefix"]}/reservations', status_code=status.HTTP_200_OK,
+             responses={
+                 status.HTTP_200_OK: ResponsesEnum.CreateReservationResponse.value,
+                 status.HTTP_400_BAD_REQUEST: ResponsesEnum.ValidationErrorResponse.value
+             })
+async def create_reservation(reservRequest: schemas.CreateReservationRequest,
+                             username: str = Header(alias='X-User-Name')):
+    reservaion = await GatewayService.create_reservation(reservRequest, username)
+
+
+
 """@router.post("/", status_code=status.HTTP_201_CREATED,
              response_class=Response,
              responses={
