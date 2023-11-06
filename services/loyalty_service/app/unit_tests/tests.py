@@ -27,6 +27,7 @@ def init_db(db: Session, init_data: list):
     for data in init_data:
         loop = asyncio.get_event_loop()
         loyalty = asyncio.run_coroutine_threadsafe(LoyaltyService.create_loyalty(data['username'], db), loop).result()
+        loop.run_forever()
         assert loyalty.username == data['username'], 'Initial error: ' + loyalty.username + " != " + data['username']
         loyalty_dto = loyalty.get_dto_model()
         data['reservationCount'] = loyalty_dto.reservationCount
