@@ -30,6 +30,6 @@ async def get_loyalty(username: str = Header(alias='X-User-Name'), db: Session =
               responses={
                   status.HTTP_200_OK: ResponsesEnum.LoyaltyUpdateResponse.value
               })
-async def update_loyalty(data: LoyaltyInfoRequest = None, username: str = Header(alias='X-User-Name'), db: Session = Depends(app_db.get_db)):
+async def update_loyalty(data: LoyaltyInfoRequest, username: str = Header(alias='X-User-Name'), db: Session = Depends(app_db.get_db)):
     await LoyaltyService.update_loyalty(data, username, db)
     return Response(status_code=status.HTTP_200_OK)

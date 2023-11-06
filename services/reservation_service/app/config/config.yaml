@@ -1,15 +1,14 @@
 postgres_db:
   user: program
   password: test
-  db_name: loyalties  # loyalties
-  host: loyalties
+  db_name: reservations             # postgres
+  host: reservations
   port: 5432
 
-loyalty_app:
+reservation_app:
   host: "0.0.0.0"
   external_ip: "95.163.210.40"
-  prefix: "/api/v1/loyalty"
-  port: 8050
+  prefix: "/api/v1"
+  port: 8070
   log_level: "info"
   reload: True
-

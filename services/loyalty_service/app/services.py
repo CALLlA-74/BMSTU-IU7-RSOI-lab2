@@ -30,8 +30,8 @@ async def update_loyalty(data: LoyaltyInfoRequest, username: str, db: Session) -
     if loyalty is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if data.reservationCount:
-        loyalty.update_reservation_count(data.reservationCount)
+    if data.reservationCountOperation:
+        loyalty.update_reservation_count(data.reservationCountOperation)
     db.add(loyalty)
     db.commit()
     db.refresh(loyalty)

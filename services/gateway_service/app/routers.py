@@ -1,5 +1,8 @@
-from fastapi import APIRouter, status, Request, Header
+from fastapi import APIRouter, status, Header
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import Response, JSONResponse
+from fastapi.encoders import jsonable_encoder
+from uuid import UUID
 
 import services as GatewayService
 import schemas.dto as schemas
@@ -20,7 +23,7 @@ async def check_availability():
                 status.HTTP_200_OK: ResponsesEnum.PaginationResponse.value
             })
 async def get_all_hotels(page: int = 0, size: int = 0):
-    return (await GatewayService.get_all_hotels(page, size)).json()
+    return await GatewayService.get_all_hotels(page, size)
 
 
 @router.get(f'{settings["prefix"]}/me', status_code=status.HTTP_200_OK,
@@ -52,11 +55,11 @@ async def get_reservations(username: str = Header(alias='X-User-Name')):
                 status.HTTP_200_OK: ResponsesEnum.ReservationResponse.value,
                 status.HTTP_404_NOT_FOUND: ResponsesEnum.ErrorResponse.value
             })
-async def get_reservation_by_uid(reservaionUid: str, username: str = Header(alias='X-User-Name')):
-    reservaion = await GatewayService.get_reservation_by_uid(reservaionUid, username)
-    if reservaion is None:
+async def get_reservation_by_uid(reservationUid: UUID, username: str = Header(alias='X-User-Name')):
+    reservation = await GatewayService.get_reservation_by_uid(reservationUid, username)
+    if reservation is None:
         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=schemas.ErrorResponse().model_dump())
-    return reservaion
+    return reservation
 
 
 @router.post(f'{settings["prefix"]}/reservations', status_code=status.HTTP_200_OK,
@@ -66,31 +69,27 @@ async def get_reservation_by_uid(reservaionUid: str, username: str = Header(alia
              })
 async def create_reservation(reservRequest: schemas.CreateReservationRequest,
                              username: str = Header(alias='X-User-Name')):
-    reservation = await GatewayService.create_reservation(reservRequest, username)
-    if reservation is None:
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=schemas.ValidationErrorResponse())
+    try:
+        reservation = await GatewayService.create_reservation(reservRequest, username)
+    except RequestValidationError as exc:
+        details = [schemas.ErrorDescription(
+            field=e["field"],
+            error=e["msg"]
+        ) for e in jsonable_encoder(exc.errors())]
+
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=schemas.ValidationErrorResponse(
+            message='Invalid request',
+            errors=list(details)
+        ).model_dump())
     return reservation
 
 
-@router.delete(f'{settings["prefix"]}/reservations/' + '{reservationUid}', status_code=status.HTTP_200_OK,
+@router.delete(f'{settings["prefix"]}/reservations/' + '{reservationUid}', status_code=status.HTTP_204_NO_CONTENT,
                responses={
-                   status.HTTP_200_OK: ResponsesEnum.CreateReservationResponse.value,
-                   status.HTTP_400_BAD_REQUEST: ResponsesEnum.ValidationErrorResponse.value
+                   status.HTTP_404_NOT_FOUND: ResponsesEnum.ErrorResponse.value
                })
-async def delete_reservation(reservationUid: str, username: str = Header(alias='X-User-Name')):
-    await GatewayService.delete_reservation(reservationUid, username)
-    if reservation is None:
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=schemas.ValidationErrorResponse())
-    return reservation
-
-
-"""@router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT,
-               response_class=Response,
-               responses={
-                   status.HTTP_204_NO_CONTENT: ResponsesEnum.PersonByIDDeleteResponse.value
-               })
-async def delete_person(id: int = None, db: Session = Depends(app_db.get_db)):
-    PersonService.delete_person(id, db)
-    return Response(
-        status_code=status.HTTP_204_NO_CONTENT
-    )"""
+async def delete_reservation(reservationUid: UUID, username: str = Header(alias='X-User-Name')):
+    resp = await GatewayService.delete_reservation(reservationUid, username)
+    if resp is None:
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=schemas.ErrorResponse().model_dump())
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

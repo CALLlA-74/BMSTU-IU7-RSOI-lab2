@@ -8,6 +8,4 @@ class LoyaltyInfoResponse(BaseModel):
 
 
 class LoyaltyInfoRequest(BaseModel):
-    status: str | None = None
-    discount: int | None = None
-    reservationCount: int | None = None
+    reservationCountOperation: int | None = None
