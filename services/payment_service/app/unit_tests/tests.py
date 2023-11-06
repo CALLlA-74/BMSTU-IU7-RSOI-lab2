@@ -3,6 +3,7 @@ from fastapi.exceptions import HTTPException
 from fastapi import status
 from sqlalchemy.orm import Session
 from uuid import UUID
+import asyncio
 
 from unit_tests.mock_data import PaymentsMock
 from database.database import Database
@@ -26,7 +27,7 @@ def check_equality(a: PaymentInfo, b: dict):
 
 async def init_db(db: Session, init_data: list):
     for data in init_data:
-        payment = await PaymentService.create_payment(data['price'], db)
+        payment = asyncio.run(PaymentService.create_payment(data['price'], db))
         assert payment.price == data['price'], 'Initial error: ' + payment.price + " != " + data['price']
         payment_dto = payment.get_dto_model()
         data['price'] = payment_dto.price

@@ -4,6 +4,7 @@ from fastapi import status
 from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime
+import asyncio
 
 from unit_tests.mock_data import ReservationsMock
 from database.database import Database
@@ -57,7 +58,7 @@ async def init_db(db: Session, init_data1: list, init_data2: list):
         db.refresh(new_hotel)
 
     for data in init_data2:
-        reservation = await ReservationService.create_reservation(data['username'], data, db)
+        reservation = asyncio.run(ReservationService.create_reservation(data['username'], data, db))
         assert reservation.paymentUid == data['paymentUid'], 'Initial error: ' + reservation.paymentUid + " != " + data['paymentUid']
         assert reservation.hotelUid == data['hotelUid'], 'Initial error: ' + reservation.hotelUid + " != " + data['hotelUid']
         assert reservation.startDate == data['startDate'], 'Initial error: ' + reservation.startDate + " != " + data['startDate']
