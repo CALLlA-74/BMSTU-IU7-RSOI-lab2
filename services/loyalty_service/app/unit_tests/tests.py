@@ -18,9 +18,9 @@ test_db = next(test_database.get_db())
 
 
 def check_equality(a: LoyaltyInfoResponse, b: dict):
-    return (a['status'] == b['status'] and
-            a['discount'] == b['discount'] and
-            a['reservationCount'] == b['reservationCount'])
+    return (a.status == b['status'] and
+            a.discount == b['discount'] and
+            a.reservationCount == b['reservationCount'])
 
 
 def init_db(db: Session, init_data: list):
