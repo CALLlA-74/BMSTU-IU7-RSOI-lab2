@@ -60,9 +60,9 @@ async def test_get_by_username_success():
 
 async def test_update_by_username_success():
     try:
-        for i in range(25):
+        for i in range(1, 25):
             update_data = LoyaltyInfoRequest(
-                reservationCount=i
+                reservationCountOperation=1
             )
             loyalty = (await LoyaltyService.update_loyalty(update_data, loyalties[0]['username'], test_db)).get_dto_model()
             correct_loyalty = {
@@ -80,7 +80,7 @@ async def test_update_by_username_success():
 async def test_update_by_username_not_found():
     try:
         update_data = LoyaltyInfoRequest(
-                reservationCount=10
+                reservationCountOperation=10
         )
         await LoyaltyService.update_loyalty(update_data, 'unknown_name', test_db)
         assert False, 'in updating person (not found): no 404 exception'
