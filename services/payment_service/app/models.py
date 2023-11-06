@@ -3,7 +3,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from typing import Final, Any
 from database.database import Base
 from schemas.dto import PaymentInfo
-#from uuid import UUID
 import uuid
 
 PAYMENT_STATUS: Final = ['CANCELED', 'PAID']
