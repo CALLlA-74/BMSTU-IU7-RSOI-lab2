@@ -22,7 +22,7 @@ def check_equality(a: LoyaltyInfoResponse, b: dict):
             a['reservationCount'] == b['reservationCount'])
 
 
-def init_db(db: Session, init_data: list):
+async def init_db(db: Session, init_data: list):
     for data in init_data:
         loyalty = await LoyaltyService.create_loyalty(data['username'], db)
         assert loyalty.username == data['username'], 'Initial error: ' + loyalty.username + " != " + data['username']

@@ -24,7 +24,7 @@ def check_equality(a: PaymentInfo, b: dict):
             a['uid'] == b['uid'])
 
 
-def init_db(db: Session, init_data: list):
+async def init_db(db: Session, init_data: list):
     for data in init_data:
         payment = await PaymentService.create_payment(data['price'], db)
         assert payment.price == data['price'], 'Initial error: ' + payment.price + " != " + data['price']

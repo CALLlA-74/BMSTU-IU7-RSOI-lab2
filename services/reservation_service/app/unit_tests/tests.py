@@ -39,7 +39,7 @@ def check_reservation_equality(a: ReservationResponse, b: dict):
             a['paymentUid'] == b['paymentUid'])
 
 
-def init_db(db: Session, init_data1: list, init_data2: list):
+async def init_db(db: Session, init_data1: list, init_data2: list):
     for hotel in init_data1:
         new_hotel = Hotel(
             id = hotel['id'],
