@@ -2,6 +2,7 @@ from copy import deepcopy
 from fastapi.exceptions import HTTPException
 from fastapi import status
 from sqlalchemy.orm import Session
+import asyncio
 
 from unit_tests.mock_data import LoyaltiesMock
 from database.database import Database
@@ -22,9 +23,9 @@ def check_equality(a: LoyaltyInfoResponse, b: dict):
             a['reservationCount'] == b['reservationCount'])
 
 
-async def init_db(db: Session, init_data: list):
+def init_db(db: Session, init_data: list):
     for data in init_data:
-        loyalty = await LoyaltyService.create_loyalty(data['username'], db)
+        loyalty = asyncio.run_coroutine_threadsafe(LoyaltyService.create_loyalty(data['username'], db)).result()
         assert loyalty.username == data['username'], 'Initial error: ' + loyalty.username + " != " + data['username']
         loyalty_dto = loyalty.get_dto_model()
         data['reservationCount'] = loyalty_dto.reservationCount
