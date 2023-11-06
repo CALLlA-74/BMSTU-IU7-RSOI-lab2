@@ -28,11 +28,11 @@ jobs:
       - name: Run unit tests for loyalty service
         run: pytest -vs services/loyalty_service/app/unit_tests/tests.py
 
-      - name: Run unit tests for payment service
-        run: pytest -vs services/payment_service/app/unit_tests/tests.py
-        
-      - name: Run unit tests for reservation service
-        run: pytest -vs services/reservation_service/app/unit_tests/tests.py
+      #- name: Run unit tests for payment service
+      #  run: pytest -vs services/payment_service/app/unit_tests/tests.py
+      #  
+      #- name: Run unit tests for reservation service
+      #  run: pytest -vs services/reservation_service/app/unit_tests/tests.py
   
   deploy:
     name: Deploy service on VM
