@@ -1,0 +1,256 @@
+1) loyalty_service
+	1.1)description: "получить полную информацию о юзере"
+		request:
+			GET /api/v1/loyalty
+			X-User-Name: {{username}}
+		
+		response:
+			{
+				"status": "GOLD",
+				"discount": 10,
+				"reservationCount": 25
+			}
+	
+	1.2)description: "обновить счетчик бронирований юзера"
+		request:
+			PATCH /api/v1/loyalty
+			X-User-Name: {{username}}
+		
+		response:
+			"200": description: все изменено
+			
+			"404": клиент не найден
+
+2) reservation_service
+	2.1)description: "получить список отелей"
+		request: 
+			GET /api/v1/hotels&page={{page}}&size={{size}}
+		
+		пояснения: 
+			схему ЗАПРОСА и ОТВЕТА смотреть в openapi лабы 2
+	
+	2.2)description: "получить информацию о конкретном отеле"
+		request:
+			GET /api/v1/hotels/{{hotelUid}}
+			
+		response:
+			"200":
+				description: отель найден
+				content:
+					application/json:
+						schema:
+							$ref: "#/components/schemas/HotelResponse"				(схема ОТВЕТА описана в openapi лабы 2)
+			
+			"404":
+				description: отель не найден
+				content:
+					application/json:
+						schema:
+							$ref: "#/components/schemas/ErrorResponse"					(схема ОТВЕТА описана в openapi лабы 2)
+			
+	2.3)description: "получить список бронирований юзера"
+		request:
+			GET /api/v1/reservations
+			X-User-Name: {{username}}
+			
+		пояснения: 
+			схему ЗАПРОСА и ОТВЕТА смотреть в openapi лабы 2
+			
+	2.4)description: "получить информацию по конкретному бронированию"
+		request:
+			GET /api/v1/reservations/{{reservationUid}}
+			X-User-Name: {{username}}
+		
+		пояснения: 
+			схему ЗАПРОСА и ОТВЕТА смотреть в openapi лабы 2
+	
+	2.5)description: "Забронировать отель"
+		request:
+			POST /api/v1/reservations
+			Content-Type: application/json
+			X-User-Name: {{username}}
+
+			{
+				"paymentUid": "d5ddd2e3-b0ce-49d3-bb13-7726d5816b8d",
+				"hotelUid": "049161bb-badd-4fa8-9d90-87c9a82b0668",
+				"startDate": "2021-10-08",
+				"endDate": "2021-10-11"
+			}
+		
+		responses:
+			"200":
+				description: Информация о бронировании
+				content:
+					{
+						"ReservationUid": "cbc82aac-7737-11ee-b962-0242ac120002",
+						"paymentUid": "d5ddd2e3-b0ce-49d3-bb13-7726d5816b8d",
+						"hotelUid": "049161bb-badd-4fa8-9d90-87c9a82b0668",
+						"startDate": "2021-10-08",
+						"endDate": "2021-10-11",
+						"status": "PAID"											# Возможные значения поля STATUS: PAID, CANCELED
+					}
+			"400":
+			description: Ошибка валидации данных
+			content:
+				application/json:
+					schema:
+						$ref: "#/components/schemas/ErrorResponse"				(схема ОТВЕТА описана в openapi лабы 2)
+			
+	2.6)description: "обновить бронирование"
+		request:
+			PATCH /api/v1/reservations/{{reservationUid}}
+			Content-Type: application/json
+			X-User-Name: {{username}}
+
+			{
+				"paymentUid": "d5ddd2e3-b0ce-49d3-bb13-7726d5816b8d",				# может быть пустым
+				"hotelUid": "049161bb-badd-4fa8-9d90-87c9a82b0668",					# может быть пустым
+				"startDate": "2021-10-08",											# может быть пустым
+				"endDate": "2021-10-11",							# может быть пустым
+				"status": "CANCELED"								# может быть пустым			# Возможные значения поля STATUS: PAID, CANCELED
+			}
+		
+		response:
+			"204":
+				description: Бронь не найдена
+			
+			"404":
+				description: отель не найден
+				content:
+					application/json:
+						schema:
+							$ref: "#/components/schemas/ErrorResponse"					(схема ОТВЕТА описана в openapi лабы 2)
+
+3) payment_service
+	3.1)description: "создать запись об оплате"
+		request:
+			POST /api/v1/payments
+			X-Payment-Price: {{payment_price}}
+		
+		response:
+			"200":
+				description: оплачено
+				content:
+					application/json:
+						schema:
+							$ref: "#/components/schemas/PaymentInfo"				(схема ОТВЕТА описана в openapi лабы 2)
+	
+	3.2)description: "изменить запись об оплате"
+		request:
+			PATCH /api/v1/payments/{{paymentUid}}
+			
+			content:
+					application/json:
+						schema:
+							$ref: "#/components/schemas/PaymentInfo"				(схема ЗАПРОСА описана в openapi лабы 2)
+			
+		
+		response:
+			"200":
+				description: успешно изменено
+			
+			"404":
+				description: запись не найдена
+				content:
+					application/json:
+						schema:
+							$ref: "#/components/schemas/ErrorResponse"				(схема ОТВЕТА описана в openapi лабы 2)
+
+
+
+4) gateway_service:
+	4.1)description: "получить список отелей"
+		request: 
+			GET /api/v1/hotels&page={{page}}&size={{size}}
+		
+		response:
+			[такой же как в полученном ответе]
+		
+		realize:
+			1) переслать запрос в reservation_service (2.1)
+			2) вернуть ответ
+	
+	(пока ок)4.2)description: "получить полную информацию о юзере"
+		request:
+			GET /api/v1/me
+			X-User-Name: {{username}}
+		
+		response:
+			
+			
+		realize:
+			1) сделать запрос в reservation_service на получение информации о бронированиях юзера (2.3)
+			2) сделать запрос в loyalty_service на получение полной информации о юзере (1.1)
+			3) собрать и вернуть ответ
+			
+	(пока ок)4.3)description: "получить список бронирований юзера"
+		request:
+			GET /api/v1/reservations
+			X-User-Name: {{username}}
+		
+		realize:
+			1) переслать запрос в reservation_service на получение информации о бронированиях юзера (2.3)
+			2) вернуть ответ
+			
+	(пока ок)4.4)description: "получить информацию по конкретному бронированию"
+		request:
+			GET /api/v1/reservations/{{reservationUid}}
+			X-User-Name: {{username}}
+		
+		realize:
+			1) переслать запрос в reservation_service на получение информации о конкретном бронировании юзера (2.4)
+			2) вернуть ответ
+			
+	4.5)description: "забронировать отель"
+		request:
+			POST /api/v1/reservations
+			Content-Type: application/json
+			X-User-Name: {{username}}
+
+			{
+				"hotelUid": "049161bb-badd-4fa8-9d90-87c9a82b0668",
+				"startDate": "2021-10-08",
+				"endDate": "2021-10-11"
+			}
+		
+		realize:
+			1) сделать запрос в reservation_service на получение цены проживания в отеле по hotelUid (2.2)
+				если нет, то (см. openapi)
+			2) вычислить стоимость проживания
+			3) сделать запрос в loyalty_service и получить информацию о юзере (1.1)
+			4) применить скидку юзера
+			5) сделать запрос в payment_service на создание новой записи об оплате (3.1)
+			6) сделать запрос в loyalty_service на обновление счетчика бронирований (1.2)
+			7) сделать запрос в reservation_service на создание записи о бронировании (2.5)
+			8) вернуть ответ reservation_service юзеру
+				
+
+	4.6)description: "отменить бронирование"
+		request:
+			DELETE: /api/v1/reservations/{{reservationUid}}
+			X-User-Name: {{username}}
+		
+		response:
+			"204":
+				description: Бронь успешно отменена
+			"404":
+				description: Бронь не найдена
+				content:
+					application/json:
+						schema:
+							$ref: "#/components/schemas/ErrorResponse"				(схема ОТВЕТА описана в openapi лабы 2)
+		
+		realize:
+			1) сделать запрос в reservation_service на установку статуса CANCELED		(2.6)
+			2) сделать запрос в payment_service на установку статуса CANCELED			(3.2)
+			3) сделать запрос в loyalty_service на уменьшение на 1 счетчика бронирований
+			4) вернуть ответ
+
+	4.7)description: "получить информацию о статусе в программе лояльности"
+		request:
+			GET {{baseUrl}}/api/v1/loyalty
+			X-User-Name: {{username}}
+		
+		realize:
+			1) переслать запрос в loyalty_service
+			2) вернуть ответ loyalty_service юзеру
